@@ -1,0 +1,810 @@
+ 
+
+ ;11111111111111111io口配置寄存器地址
+
+P0M1    DATA    0x93            ; P0M1.n,P0M0.n     =00--->Standard,    01--->push-pull
+P0M0    DATA    0x94            ;                   =10--->pure input,  11--->open drain
+
+P1M1    DATA    0x91            ; P1M1.n,P1M0.n     =00--->Standard,    01--->push-pull
+P1M0    DATA    0x92            ;                   =10--->pure input,  11--->open drain
+P2M1    DATA    0x95            ; P2M1.n,P2M0.n     =00--->Standard,    01--->push-pull
+P2M0    DATA    0x96            ;                   =10--->pure input,  11--->open drain
+P3M1    DATA    0xB1            ; P3M1.n,P3M0.n     =00--->Standard,    01--->push-pull
+P3M0    DATA    0xB2            ;                   =10--->pure input,  11--->open drain
+P4M1    DATA    0xB3            ; P4M1.n,P4M0.n     =00--->Standard,    01--->push-pull
+P4M0    DATA    0xB4            ;                   =10--->pure input,  11--->open drain
+P5M1    DATA    0xC9            ; P5M1.n,P5M0.n     =00--->Standard,    01--->push-pull
+P5M0    DATA    0xCA            ;                   =10--->pure input,  11--->open drain
+P6M1    DATA    0xCB            ; P6M1.n,P6M0.n     =00--->Standard,    01--->push-pull
+P6M0    DATA    0xCC            ;                   =10--->pure input,  11--->open drain
+P7M1    DATA    0xE1            ;
+P7M0    DATA    0xE2            ;
+
+
+		     ;111111111111中断优先级寄存器
+  ; IP  EQU 0B8H
+   IPH DATA 0B7H
+   IP2 DATA  0B5H
+   IP2H DATA 0B6H 
+  ; AUXINTIF  DATA 0EFH
+   AUXR1   EQU 0A2H;0BAH   P_SW1---对---
+  	 ;1111111111111111111111111111111111111111外部中断寄存器11111111111111111
+    AUXR2   EQU 8FH	 ;INTCLKO 8HH.4 EX2 int2 8FH.5 INT3, 8FH.6  INT4允许位 =1允许  =0禁止	  int2ok
+AUXINTIF DATA 0EFH;扩展外部中断和扩展定时器的中断请求标志0EFH,4  INT2，0EFH.5  INT3，EFH.6 INT4	 111111111int2ok
+
+
+		 ;      TMOD DATA 89H ;标识ram定时器计数器工作模式寄存器手册593页讲tmod
+	   AUXR  DATA 8EH; 辅助寄存器 534页	
+	   INT_CLKO  DATA 8FH;595页 t0 1 2 的时钟输出寄存器和外部中断允许INT_CLKO(AUXR2)
+	   TH2 DATA 0D6H  ;
+	   TL2 DATA 0D7H   ;
+	   IE2 DATA  0AFH ;定时器T2 T3 T4的中端控制寄存器
+       
+	   
+	   CMPCR1  DATA 0E6H; 
+	   CMPCR2  DATA 0E7H;        比较器相关寄存器
+
+
+
+	 ;1111111111111111IO口位地址映射  
+  P54 BIT 0C8H.4
+  P55 BIT 0C8H.5
+  P41 BIT 0C0H.1
+  P42 BIT 0C0H.2
+  P44 BIT 0C0H.4
+  P45 BIT 0C0H.5
+  EADC  BIT IE.5; adc中断允许位	
+
+   ;--------------pca spw头文件
+CCON        DATA    0D8H
+CF          BIT     CCON.7
+CR          BIT     CCON.6
+CCF3        BIT     CCON.3
+CCF2        BIT     CCON.2
+CCF1        BIT     CCON.1
+CCF0        BIT     CCON.0
+CMOD        DATA    0D9H
+CL          DATA    0E9H
+CH          DATA    0F9H
+CCAPM0      DATA    0DAH
+CCAP0L      DATA    0EAH
+CCAP0H      DATA    0FAH
+PCA_PWM0    DATA    0F2H
+CCAPM1      DATA    0DBH
+CCAP1L      DATA    0EBH
+CCAP1H      DATA    0FBH
+PCA_PWM1    DATA    0F3H
+CCAPM2      DATA    0DCH
+CCAP2L      DATA    0ECH
+CCAP2H      DATA    0FCH
+PCA_PWM2    DATA    0F4H
+CCAPM3      DATA    0DDH
+CCAP3L      DATA    0EDH
+CCAP3H      DATA    0FDH
+PCA_PWM3    DATA    0F5H
+
+
+ 
+
+ 
+
+ ORG 000H
+ LJMP  100H
+  ORG  0BH
+  LJMP  300H;定时器T0中断入口
+
+    ORG  1BH   ; 定时器1中断入口
+   LJMP 400H ; 
+      ORG 53H;INT2中断入口1ok
+      LJMP  500H  ;
+	   ORG 5BH; INT3中断入口地址1ok 
+	   LJMP  550H
+	   ORG     0023H
+       LJMP    600H
+
+ ORG 100H
+ MOV P0M0,#00000000B
+ MOV P0M1,#00000000B;IO口设置为准双向口
+ MOV P1M0,#00000000B
+ MOV P1M1,#00000000B;IO口设置为准双向口
+ MOV P2M0,#00000000B
+ MOV P2M1,#00000000B;IO口设置为准双向口
+ MOV P3M0,#00000000B
+ MOV P3M1,#00000000B;IO口设置为准双向口
+ MOV P5M1,#00000000B
+ MOV P5M0,#00000000B
+ MOV P4M1,#00000000B
+ MOV P4M0,#00000000B
+	;1111111IO口初始化、
+MOV A,#0FFH
+	MOV P0,A
+  	MOV P1,A
+	MOV P2,A
+	MOV P3,A
+ 	SETB P54
+	SETB P55
+	SETB P41
+
+MOV 29H,#00010001B;环路循环	控制数码管位依次显示
+   ;中断控制寄存器初始化
+            MOV SP,#3FH;
+            SETB EA ;IE.7总中断允许控制位 允许 
+			  SETB IE.3;T1溢出中断允许位
+			  SETB IE.1; T0溢出中断允许
+			  CLR IE.0;外部中断0关
+			  CLR IE.2;外部中断1关
+	      	SETB IP.3;T1设置为高优先级
+   ;外部中断初始化 打开外部中断			
+			ORL AUXR2,#00110000B; 允许int 23中断 15W手册564页
+        	ANL AUXR2,#11111000B;不允许P34/35/30 引脚作为T0/T1/T2时钟信号输出
+   
+   
+         ;定时器0  控制寄存器TCON初始值
+		 	 ;辅助寄存器AUXR
+      ANL AUXR,#01111111B; t0不分频
+
+
+	    CLR TR0 ;
+		SETB IP.1 ;T0 设置为低优先级 
+		ANL IPH,#11111101B  ; 01较低级优先级手册258页
+
+	    MOV TL0,#(255-255)
+	    MOV TH0,#(255-255)
+    	CLR TF0	;中断标志位
+    	;工作模式寄存器TOMD配置T0
+    	
+	     ANL TMOD,#11110111B;T0不受	int0引脚控制
+		ANL TMOD,#11111011B;t0用作定时功能
+     	ORL TMOD,#00000001B
+		ANL TMOD,#11111101B; 16位不自动重装
+
+
+ ;定时器1  控制寄存器TCON初始值
+	
+	 ;辅助寄存器AUXR
+      ORL AUXR,#01000000B; t1不分频
+
+	    CLR TR1 ;
+		CLR IP.3 ;T0 设置为低优先级 
+		ANL IPH,#11110111B;00最低优先级
+   	    MOV TL1,#0
+	    MOV TH1,#0
+    	CLR TF1	;中断标志位
+    	;工作模式寄存器TOMD配置T0
+    	;CLR 089H.3;T0的启停由TR0单独控制
+		 ANL TMOD,#01111111B;  T1不受int1影响
+	    ANL TMOD,#10111111B;t1用作定时功能
+     	ORL TMOD,#00010000B
+		ANL TMOD,#11011111B; 16位不重载
+		SETB TR1
+   
+   
+   
+   
+   	 ;1111111111串口1中断 配置
+         ORL SCON,#11000000B;设置为方式3 9位uart波特率可变
+		 CLR SCON.5 ;禁止地址筛选
+		CLR SCON.4; SETB SCON.4;允许串口接收数据
+		 
+		 ANL PCON,#01111111B;波特率不加倍
+		 ANL PCON,#10111111B;
+		 
+		 SETB IP.4
+		 ORL IPH,#00010000B;串口1设最高优先级
+		 
+		 ANL AUXR,#11110111B;T2设置为定时器
+		
+		 ORL AUXR,#00000100B;T2不分频
+		 ORL AUXR,#00000001B;T2作为aurt1的波特率
+	;	 ANL AUXR,#11011111B;波特率不加倍固定位fosc/12
+		  ANL IE2,#11111011B;(T2定时) 2 T2中断关
+        ;  MOV TH2,#(65536-2500)/255;
+        ;  MOV TL2,#(65536-2500)MOD 255; MOD 255
+		
+		 MOV TL2,#(255-47);104 2400   26 9600波特率， MOV TL2,#(255-100); 2500波特率
+		 MOV TH2,#255;
+	    ORL  AUXR,#00010000B;运行T2开始工作 
+
+		  SETB IE.4;允许串口中断
+		 ANL AUXR1,#00111111B;串口在P3.0 P3.1
+;		 ANL PCON2,#11101111B;非广播模式
+
+
+
+
+	  
+	  ;	初始化寄存器 工件定数寄存器与计数寄存器初始值设置为0
+	  CLR 20H;
+	  CLR 21H  ;
+	  CLR 22H;
+	  CLR 23H;
+	  CLR 24H;
+	  CLR 25H ;
+	  CLR 27H ;
+	  CLR 28H; 
+
+MAIN: 
+	      JNB P3.2,TIAO1
+	   N1:JNB P2.4,GEWEI;
+	      JNB P2.5,SHIWEI  ;
+		  JNB P2.6,BAIWEI ;
+  		  JNB P2.7,QIANWEIJ ;
+		  JNB P0.3,$
+		  JB 28H.2,ZANTING;工件数达到设定值暂停 
+		  JMP MAIN
+	 QIANWEIJ: LJMP QIANWEI
+  ;111111111111111111暂停
+  ZANTING: JB P0.3,$
+          SETB P55
+          CLR 28H.2;
+          JMP MAIN;
+   ;;11111111111
+   TIAO1:LJMP JJ33
+;111111111111111111个位
+ GEWEI:
+       
+       MOV R6,#05H;
+	   MOV R7,#0FFH;
+GEWEIX:	   JB P2.4,N1
+	   DJNZ R7,GEWEIX
+	   DJNZ R6,GEWEIX
+	   JNB P2.4,$
+	   NOP
+	   LCALL DELAY
+	   MOV A,22H;
+	   ANL A,#00001111B;
+	   CJNE	 A,#9, JIAGE
+	   ANL 22H,#11110000B;
+	   JMP  MAIN ;
+ JIAGE:    INC 22H;
+     
+        JMP  MAIN
+ SHIWEI:
+          MOV R6,#05H;
+	      MOV R7,#0FFH;
+SHIWEIX:  JB P2.5,MAIN;
+         DJNZ R7,SHIWEIX;
+		 DJNZ R6,SHIWEIX;
+		  JNB P2.5,$
+		  LCALL DELAY
+		 MOV A,22H;
+         ANL A,#11110000B
+		 RR A
+		 RR A
+		 RR	A
+		 RR A
+		 CJNE A,#9,JIASHI;
+		 CLR A;
+		 ANL 22H,#00001111B
+		 JMP MAIN
+ JIASHI:INC A
+         RL A
+		 RL A
+		 RL A
+		 RL A
+		 ANL 22H,#00001111B;
+		 ORL 22H,A; 
+          
+      JMP  MAIN
+ BAIWEI:
+       
+       MOV R6,#05H;
+	   MOV R7,#0FFH;
+BAIWEIX:	   JB P2.6,MAIN
+	   DJNZ R7,BAIWEIX
+	   DJNZ R6,BAIWEIX
+	   JNB P2.6,$
+	   LCALL DELAY
+	   MOV A,23H;
+	   ANL A,#00001111B;
+	   CJNE	 A,#9, JIABAI
+	   ANL 23H,#11110000B;
+	   JMP  MAIN ;
+JIABAI:    INC 23H;
+     
+        JMP  MAIN
+ MAINJ:JMP MAIN
+
+QIANWEI:  
+	
+          MOV R6,#05H;
+	      MOV R7,#0FFH;
+QIANWEIX:  JB P2.7,MAINJ;
+         DJNZ R7,QIANWEIX;
+		 DJNZ R6,QIANWEIX;
+		  JNB P2.7,$
+		  LCALL DELAY
+		 MOV A,23H;
+         ANL A,#11110000B
+		 RR A
+		 RR A
+		 RR	A
+		 RR A
+		 CJNE A,#9,JIAQIAN;
+		 CLR A;
+		 ANL 23H,#00001111B
+		 JMP MAIN
+ JIAQIAN:INC A
+         RL A
+		 RL A
+		 RL A
+		 RL A
+		 ANL 23H,#00001111B;
+		 ORL 23H,A; 
+          
+      JMP  MAIN
+
+     
+
+		   
+ JJ33:    JB P3.3,N111
+         ;JNB P3.3,TTT1B
+ TTT1B:   JNB 28H.3,TTT1; 顶工件气缸的接近开关传感器，预防抖动引起失误触发标志位。
+        
+
+ 	N111:		JMP	N1
+
+TTT1:      ;MOV 27H,#100
+           JB 28H.0,BIAOZHI2
+		   MOV 27H,#250
+		   SETB 28H.0
+			 MOV TH0,#(65536-50000)/255;
+               MOV TL0,#(65536-50000)MOD 255; MOD 255
+			   SETB TR0 
+			   CLR P2.0;工件拐角顶出
+			   ;SETB P2.2	  ;档格气缸顶出
+			   CLR P2.3;调速电机停转
+  BIAOZHI2: ;1111JB 28H.1,QG3221GO
+           JMP N1
+
+  ;T0延时结束后
+;111111111 QG3221GO: 
+        ;  CLR P2.2	  ;档格气缸顶出
+	;;;;;;;	  CLR P2.3 ;调速电机停转 
+	;	   CLR P0.0	  ;
+	;11111111111	  CLR P2.1 ;开气缸2顶住工件
+	;	  JNB P3.3,$  ;接近开关不等于1原地等待
+	;111111111111111122	  SETB 28H.3
+	;11111111111111111	  CLR P0.0 ;攻丝机向下方攻丝
+;		  CLR P0.1;总攻丝机向下开关 开
+          ;1111111JMP N1  
+
+
+
+
+
+
+
+
+	;1111111111111111111111111111111111111串口子程序入口1111
+     DELAY:	; RET
+	      MOV 2AH,#00000001B
+	      MOV 2BH,#00000001B
+	      MOV 2CH,#00H;CLR 2CH
+	      MOV 2DH,#00000001B
+	      MOV 2EH,#00H;CLR 2EH
+		  MOV SBUF,#43H
+		  RET
+
+
+   ;1111111111111定时器中断0 入口延迟程序
+				ORG  300H
+		 PUSH ACC
+		PUSH  PSW
+	     SETB RS0
+		 CLR RS1
+
+	
+		 DJNZ 27H,CHONGZHUANG;t0 延迟值设定寄存器
+		 ;   SETB P2.0	 ;气缸1收回
+	      CLR TR0;
+		  JMP YANCHIOK;
+		  CHONGZHUANG : MOV TH0,#(65536-10000)/255;
+               MOV TL0,#(65536-10000)MOD 255; MOD 255
+			   SETB TR0 
+			   JMP OVERT;
+
+		  ;111111111111111111111h工件计数
+  YANCHIOK: ; MOV 24H,#9 
+            MOV A,24H
+			ANL  A,#00001111B
+			CJNE A,#9,JISHUGE
+			ANL 24H,#11110000B
+			MOV A,24H
+			ANL A,#11110000B;
+			RR A
+			RR A
+			RR A
+			RR A ;
+			CJNE  A,#9,JISHUSHI
+		;	ANL 24H,#11110000B
+        ANL 24H,#00000000B
+		MOV A,25H;
+		ANL A,#00001111B
+		CJNE A,#9,JISHUBAI
+		ANL 25H,#11110000B
+		 MOV A,25H;
+		 RR A 
+		 RR A
+		 RR A
+		 RR A
+		 CJNE A,#9,JISHUQIAN
+		   CLR 25H
+		   JMP OVERTB
+  JISHUQIAN:INC A
+            RL A
+			RL A
+			RL A
+			RL A
+           MOV 25H,A;
+		 JMP OVERTB
+
+
+	JISHUBAI:INC 25H
+	JMP OVERTB
+	JISHUSHI: INC A
+	      NOP
+		  NOP
+	      RL A
+	      RL A
+	      RL A
+	      RL A
+		 MOV 24H,A
+		 
+		JMP OVERTB
+
+   JISHUGE:INC 24H
+		
+  OVERTB: 
+         ; SETB 28H.1
+		 CLR A
+		 CJNE A,22H,DINGSHU
+		 CJNE A,23H,DINGSHU
+		 SETB 28H.1
+		  JMP   JISHUGO
+
+
+ DINGSHU:
+         MOV A,23H
+         CJNE A,25H,JISHUGO
+		 MOV A,22H;
+        CJNE A,24H,JISHUGO
+	 ;计数寄存器等于定数寄存器时候 喇叭 报警 暂停
+	 ;	SETB 28H.2;等于1时暂停程序标志位
+		CLR P55;  喇叭报警
+		CLR 24H
+		CLR 25H
+ JISHUGO:
+	     LCALL DELAY
+		 SETB P2.0	 ;拐角推件气缸1收回
+		 CLR P2.2	  ;档格气缸顶出
+         SETB P2.3 ;电机运行 
+       ;11111  SETB 28H.1
+
+		 CLR P2.1 ;开气缸2顶住工件11111111
+         SETB 28H.3	  ;避免p33 顶工件的接近开关产生抖动再次	误设置T0
+
+		 CLR P0.0 ;攻丝机向下方攻丝	11111111
+         CLR P0.1
+
+         CLR TR0;					;
+
+	;111111111111111111111111111111111111111111	    
+   OVERT:     CLR RS0
+		 CLR RS1
+		POP	 PSW
+		POP ACC
+		RETI
+
+		  ;1111111111111定时器中断1 数码管显示程序
+				ORG  400H
+
+    JJT2:  PUSH ACC
+		   PUSH PSW
+		   SETB RS0
+		   SETB RS1
+		   CLR TR1		  ;关T1
+		  ; CLR TR0		 ;	关T0
+
+		 ;ANL AUXINTIF,#11111110B;t2中断标志位要注意 必须软件清零  
+		  CLR TF1
+  ;p54=0显示定数和按键输入值跑p54=0时显示累加计数 
+          JB P54,XIANDINGSHU
+			 MOV 20H,24H;
+			 MOV 21H,25H;
+			 JMP DISPLA
+XIANDINGSHU:MOV 20H,22H;
+            MOV 21H,23H;定数		           
+
+	DISPLA:	  MOV DPTR,#TABLE
+		   CLR A 
+		  MOV A,29H
+		  RL A
+		  MOV  29H,A	
+		  JB 29H.0,GEWEI1
+		  JB 29H.1,SHIWEI1
+		  JB 29H.2,BAIWEI1
+		  JMP  QIANWEI1
+  GEWEI1:  CLR P0.5
+          CLR P0.6
+		  SETB P0.4
+          CLR P0.7
+          MOV A, 20H
+		  ANL A,#00001111B
+		  MOVC A,@A+DPTR 
+		  MOV P1,A
+		  JMP DISPLAYEND
+  SHIWEI1:  
+          CLR P0.4		 ;1111111111111111111111111改为p0.123
+		  CLR P0.7 
+          SETB P0.5
+           CLR P0.6
+           MOV A, 20H
+		  ANL A,#11110000B
+		  SWAP  A
+		  MOVC A,@A+DPTR 
+		  MOV P1,A
+          JMP DISPLAYEND
+  BAIWEI1: 
+          SETB P0.6
+          
+		  CLR P0.7 
+          CLR P0.4
+          CLR P0.5
+          MOV A, 21H
+		  ANL A,#00001111B
+		  MOVC A,@A+DPTR 
+		  MOV P1,A
+          JMP DISPLAYEND
+  QIANWEI1: CLR P0.5
+           SETB P0.7
+		   
+           CLR  P0.6
+           CLR P0.4
+           MOV A, 21H
+		  ANL A,#11110000B
+		  SWAP	A
+		  MOVC A,@A+DPTR ;
+		  MOV P1,A
+          JMP DISPLAYEND
+DISPLAYEND:NOP 
+
+
+		  MOV TL1,#(255-50);设置下一次中断
+		  MOV TH1,#(255-10) 
+		  		  
+		 ;ORL AUXR, #00010000B;
+		 ; SETB TR0
+
+       SETB TR1
+
+		   CLR RS0
+		   CLR RS1
+		   POP PSW
+		   POP ACC
+		    RETI
+
+;打开攻丝机底部接近开关触发的外部下降沿触发中断INT2，进入中断后 使攻丝机向上走。
+		ORG  500H
+
+		CLR TR1;关定时器
+		 PUSH ACC
+		PUSH  PSW
+	     SETB RS0
+		 CLR RS1
+		; ANL AUXR2,#11101111B  ; 若要手动清除中断标志位，可以先关中断 系统就自动清除标志位
+		 ;ORL AUXR2,#00010000B;	  再打开中断即可。 不进行这步操作系统也会自动清零15手册563页
+		 ANL AUXINTIF,#11101111B;int2中断标志位清0		int ok 3
+;		CLR P0.2;攻丝机向上运行开
+;		SETB  P0.1; 攻丝机向下运行关
+        SETB P0.0;攻丝机向上运行反转退出攻丝
+		SETB P0.1
+		SETB 28H.4;
+        CLR RS0
+		 CLR RS1
+		POP	 PSW
+		POP ACC
+		SETB TR1
+		RETI
+   ;攻丝机顶部接近开关触发的外部中断3下降沿触发中断，进入中断后 使攻丝机关闭电源 停止运行
+			ORG  550H
+		CLR TR1
+
+		 PUSH ACC
+		PUSH  PSW
+	     SETB RS0
+		 CLR RS1
+		; ANL AUXR2,#11101111B  ; 若要手动清除中断标志位，可以先关中断 系统就自动清除标志位
+		 ;ORL AUXR2,#00010000B;	  再打开中断即可。 不进行这步操作系统也会自动清零15手册563页
+		 ANL AUXINTIF,#11011111B;int3中断标志位清0  int ok3
+	;	 SETB P0.2
+	     JB 28H.4, YUNXING
+		  SETB 	28H.2
+YUNXING:  SETB  P0.0;	攻丝机	向上退出
+         SETB  P0.1 
+
+	      NOP
+		 SETB P2.2;挡扶气缸收回 继电器复位							  
+		  SETB P2.1; 顶工件气缸收回	  继电器复位
+		  CLR 28H.0	;	退出攻丝状态 开始下一次循环
+	;1111111	  CLR 28H.1;
+	  CLR 28H.3;与p3.3 同步 ，避难接近开关抖动失误
+        CLR RS0
+		 CLR RS1
+
+		SETB TR1
+		POP	 PSW
+		POP ACC
+
+		RETI
+
+  			TABLE:	DB 0C0h,0F9H,0A4H,0b0H,99H,92H,82H,0F8H,80H,90H	;表：共阳数码管 0-9 
+
+			   
+		  CHUANQIAN:  DB 43H,4cH,53H,28H,30H,29H,3bH,44H,53H,34H,38H,28H,31H,30H,2cH,34H,30H,2cH,27H,0b6H,0a8H,0caH,0fdH;
+		   SHUZI:     DB 30H,31H,32H,33H,34H,35H,36H,37H,38H,39H; 1   2   3   4   5   6   7   8   9	  10   11   12   13
+		  CHUANZHONG: DB 27H,2cH,34H,29H,3bH,44H,53H,34H,38H,28H,31H,30H,2cH,31H,32H,30H,2cH,27H,0bcH,0c6H,0caH,0fdH;
+			CHUANHOU: DB 27H,2cH,31H,29H,3bH,0DH,0AH;
+					 ;1111111111111111111111111.串口子程序	11111111111111111111111111111111
+      ORG 600H
+	   	 PUSH ACC
+		PUSH  PSW
+		;CLR TR1
+	     SETB RS0
+		 CLR RS1
+		   	 CLR TI;清0	标志位
+				MOV A, 2AH
+		   CJNE A,#17H,SHUZI1
+ 		     JNB 2BH.4,SHUZI2        ;DJNZ 2BH,#0AH,SHUZI2
+			 MOV A,2CH
+		   CJNE A,#16H,SHUZI3	
+			 JNB  2DH.4,SHUZI4
+			 MOV A,2EH
+		    CJNE A,#7,SHUZIJ
+			  LJMP SOVER
+		 SHUZIJ: LJMP SHUZI5
+
+
+	SHUZI1:		  
+	       MOV  DPTR,#CHUANQIAN	;
+		   MOV  A,2AH;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   INC 2AH
+		   JMP SOVER
+  SHUZI2:  JB 2BH.0,SQIAN
+           JB 2BH.1,SBAI
+		   JB 2BH.2,SSHI
+		   JB 2BH.3,SGE
+		   JMP SOVER
+           
+		SQIAN:  
+		   
+           MOV  DPTR,#SHUZI	;
+		   MOV  A,23H;定数显示 高四位为千
+			SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2BH
+		   RL A
+		   MOV 2BH,A
+		   JMP SOVER
+	SBAI:
+		    MOV  DPTR,#SHUZI	;
+		   MOV  A,23H;定数显示 高四位为千
+		;	SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR ;
+		   ;MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2BH
+		   RL A
+		   MOV 2BH,A
+		   JMP SOVER
+	 SSHI:
+	        MOV  DPTR,#SHUZI	;
+		   MOV  A,22H;定数显示 高四位为千
+			SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A ,2BH
+		   RL A
+		   MOV 2BH,A
+		   JMP SOVER
+	  SGE:
+	        MOV  DPTR,#SHUZI	;
+		   MOV  A,22H;定数显示 高四位为千
+			;SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2BH
+
+		   RL A
+		
+		  MOV 2BH,A; MOV A,2BH	 这里写反了 害我找了一天才发现错误
+		   JMP SOVER
+
+ SHUZI3:   
+            MOV  DPTR,#CHUANZHONG	;
+		   MOV  A,2CH;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   INC 2CH
+		   JMP SOVER
+		   
+ SHUZI4:
+
+        JB 2DH.0,SJQIAN
+           JB 2DH.1,SJBAI
+		   JB 2DH.2,SJSHI
+		   JB 2DH.3,SJGE
+		   JMP SOVER
+           
+		SJQIAN:  
+		   
+           MOV  DPTR,#SHUZI	;
+		   MOV  A,25H;定数显示 高四位为千
+			SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2DH
+		   RL A
+		   MOV 2DH,A
+		   JMP SOVER
+	SJBAI:
+		    MOV  DPTR,#SHUZI	;
+		   MOV  A,25H;定数显示 高四位为千
+		;	SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		    MOV A,2DH
+		   RL A
+		   MOV 2DH,A
+		   JMP SOVER
+	 SJSHI:
+	        MOV  DPTR,#SHUZI	;
+		   MOV  A,24H;定数显示 高四位为千
+			SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2DH
+		   RL A
+		   MOV 2DH,A
+		   JMP SOVER
+	  SJGE:
+	        MOV  DPTR,#SHUZI	;
+		   MOV  A,24H;定数显示 高四位为千
+			;SWAP A	;
+			ANL A,#00001111B;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   MOV A,2DH
+		   RL A
+		   MOV 2DH,A
+		   JMP SOVER
+
+ 
+ 
+ SHUZI5:
+           MOV  DPTR,#CHUANHOU	;
+		   MOV  A,2EH;
+		   MOVC A,@A+DPTR;
+		   MOV SBUF,A
+		   INC 2EH
+		   JMP SOVER
+		   		   		   	 
+	SOVER:
+	      CLR RS0
+		  CLR RS1
+		  POP	 PSW
+		  POP ACC
+		 ; SETB TR1
+	      RETI
+
+	END
